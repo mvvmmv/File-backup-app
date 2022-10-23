@@ -99,6 +99,12 @@ class OpenFile_button(Frame):
             self.newFilesText.insert(END, str(item)+'\n')
         for item in removed:
             self.removedFilesText.insert(END, str(item)+'\n')
+            
+        # Number of files in each Text field
+        self.changedFilesText.insert(END, 'Всего: '+str(len(changed))+' файлов\n')
+        self.newFilesText.insert(END, 'Всего: '+str(len(new))+' файлов\n')
+        self.removedFilesText.insert(END, 'Всего: '+str(len(removed))+' файлов\n')
+
 
 class Action_Button(Frame):
     '''Class for Button objects for Removing, 
@@ -140,12 +146,13 @@ class Action_Button(Frame):
         # to replace the files in the Storage with latest ones
         # from the Data
         if self.text == "Заменить в Хранилище":
-            models.replaceFilesInStorage(self.entryStorage.text, 
+            dur = models.replaceFilesInStorage(self.entryStorage.text, 
                    self.entryBackup.text, changed, logFilePathRepl)
             self.changedFilesText.delete('1.0', END)
             self.changedFilesText.insert('1.0',
             "Готово! Список замененных файлов находится в файле ИзмененияЗамененные.txt")
-             
+            self.changedFilesText.insert('1.0', f"Время выполнения: %.3f секунд(ы)\n" % dur)
+ 
             # Opens log file in default OS text editor       
             models.openfile(logFilePathRepl)
                
@@ -153,12 +160,13 @@ class Action_Button(Frame):
         # to add the files to the Storage with new ones
         # from the Data
         elif self.text == "Добавить в Хранилище":
-            models.copyFilesToStorage(self.entryStorage.text, 
+            dur = models.copyFilesToStorage(self.entryStorage.text, 
                 self.entryBackup.text, new, logFilePathNew)
             self.newFilesText.delete('1.0', END)
             self.newFilesText.insert('1.0',
             "Готово! Список добавленных файлов находится в файле ИзмененияДобавленные.txt")
-             
+            self.newFilesText.insert('1.0', f"Время выполнения: %.3f секунд(ы)\n" % dur)
+
             # Opens log file in default OS text editor       
             models.openfile(logFilePathNew)
                
@@ -166,11 +174,12 @@ class Action_Button(Frame):
         # to remove the files from the Storage which absent
         # in the Data
         elif self.text == "Удалить из Хранилища":
-            models.removeFilesFromStorage(self.entryStorage.text, 
+            dur = models.removeFilesFromStorage(self.entryStorage.text, 
                 self.entryBackup.text, removed, logFilePathRem)
             self.removedFilesText.delete('1.0', END)
             self.removedFilesText.insert('1.0',
             "Готово! Список удаленных файлов находится в файле ИзмененияУдаленные.txt")  
+            self.removedFilesText.insert('1.0', f"Время выполнения: %.3f секунд(ы)\n" % dur)
         
             # Opens log file in default OS text editor       
             models.openfile(logFilePathRem)
@@ -200,7 +209,8 @@ class pathEntry(Entry):
         self.pathEntry.insert(0, text)
 
 class Backup(Frame):
-
+    '''Main class, creates GUI objects'''
+    
     def __init__(self, root):
         super().__init__()
         self.root = root
@@ -213,8 +223,10 @@ class Backup(Frame):
 
         self.pathVar = StringVar()
         
+        # Places the main frame
         self.pack(fill=BOTH, expand=True)
         
+        # Frames
         storageframe = Frame(self)
         storageframe.pack(side=TOP, expand=True, fill=BOTH)
 
@@ -222,50 +234,36 @@ class Backup(Frame):
         dataframe.pack(side=TOP, expand=True, fill=BOTH)
 
         compareButtonframe = Frame(self)
-        compareButtonframe.pack(side=TOP, expand=True, fill=BOTH)
-        
-        storagePathEntry = pathEntry(storageframe)
-        dataPathEntry = pathEntry(dataframe)
-                
+        compareButtonframe.pack(side=TOP, expand=True, fill=BOTH)        
+              
+        # LabelFrames  
         changedFilesOutputLabel = LabelFrame(
             self, width=400, height=150, text='Измененные файлы')
         changedFilesOutputLabel.pack(padx=10, pady=10)
-
-        changedFilesText = Text(changedFilesOutputLabel, width=400, height=5)
-        changedFilesText.pack(side=TOP,padx=5, pady=5)
                 
         newFilesOutputLabel = LabelFrame(
             self, width=400, height=150, text='Новые файлы')
         newFilesOutputLabel.pack(padx=10, pady=10)
-
-        newFilesText = Text(newFilesOutputLabel, width=400, height=5)
-        newFilesText.pack(side=TOP,padx=5, pady=5)
                     
         removedFilesOutputLabel = LabelFrame(
             self, width=400, height=150, text='Удаленные файлы')
         removedFilesOutputLabel.pack(padx=10, pady=10)
-
+        
+        # Text fields
+        changedFilesText = Text(changedFilesOutputLabel, width=400, height=5)
+        changedFilesText.pack(side=TOP,padx=5, pady=5)
+        
+        newFilesText = Text(newFilesOutputLabel, width=400, height=5)
+        newFilesText.pack(side=TOP,padx=5, pady=5)
+        
         removedFilesText = Text(removedFilesOutputLabel, width=400, height=5)
         removedFilesText.pack(side=TOP,padx=5, pady=5)
         
-        removeButton = Action_Button(
-            removedFilesOutputLabel, "Удалить из Хранилища", 
-            storagePathEntry, dataPathEntry, changedFilesText, 
-            newFilesText, removedFilesText)
-
-        replaceButton = Action_Button(
-            changedFilesOutputLabel, "Заменить в Хранилище", 
-            storagePathEntry, dataPathEntry, changedFilesText, 
-            newFilesText, removedFilesText)
-
-        addButton = Action_Button(
-            newFilesOutputLabel, "Добавить в Хранилище", 
-            storagePathEntry, dataPathEntry, changedFilesText, 
-            newFilesText, removedFilesText)
-
-        closeButton = Button(self, text="Закрыть", command=self.root.destroy)
-        closeButton.pack(side=BOTTOM, padx=5, pady=5)
-
+        # Entries
+        storagePathEntry = pathEntry(storageframe)
+        dataPathEntry = pathEntry(dataframe)
+        
+        # Buttons
         storageBrowseButton = Browse_button(
             storageframe, "Хранилище", storagePathEntry)
         backupBrowseButton = Browse_button(
@@ -278,6 +276,24 @@ class Backup(Frame):
         openFileButton = OpenFile_button(
             compareButtonframe, "Открыть Список Изменений", 
             changedFilesText, newFilesText, removedFilesText)
+        
+        replaceButton = Action_Button(
+            changedFilesOutputLabel, "Заменить в Хранилище", 
+            storagePathEntry, dataPathEntry, changedFilesText, 
+            newFilesText, removedFilesText)
+
+        addButton = Action_Button(
+            newFilesOutputLabel, "Добавить в Хранилище", 
+            storagePathEntry, dataPathEntry, changedFilesText, 
+            newFilesText, removedFilesText)
+        
+        removeButton = Action_Button(
+            removedFilesOutputLabel, "Удалить из Хранилища", 
+            storagePathEntry, dataPathEntry, changedFilesText, 
+            newFilesText, removedFilesText)
+        
+        closeButton = Button(self, text="Закрыть", command=self.root.destroy)
+        closeButton.pack(side=BOTTOM, padx=5, pady=5)
 
 def main():
 

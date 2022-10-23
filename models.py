@@ -1,9 +1,12 @@
 import os, sys, time, hashlib, json, datetime, shutil
+from this import d
 from pathlib import Path
 
 
 def getDeltaFiles(filepath):
-    '''Get data from json file and return 3 lists'''
+    '''Get data from json file and return 3 lists
+    for changed, new and removed files'''
+    
     deltaDict = {}
     with open(filepath, 'r', encoding='utf-8') as Delta:
         deltaDict = json.load(Delta)
@@ -27,7 +30,8 @@ def writeListOfFiles(root, doc):
     for path, subdirs, files in os.walk(root):
         for name in files:
             filepath = os.path.join(path, name)
-            dict[filepath[len(root):]] = [name, path[len(root):], str(time.ctime(os.path.getmtime(filepath)))]
+            dict[filepath[len(root):]] = [name, path[len(root):], 
+                            str(time.ctime(os.path.getmtime(filepath)))]
     with open(doc, 'w', encoding="utf-8") as f:
         json.dump(dict, f, sort_keys=True)
 
@@ -41,8 +45,9 @@ def isDataFileLaterStorageFile(datafile, storagefile):
     
 def compareJSONs(storageDoc, backupDoc, outputFile, userFriendlyOutputFile):
     '''Compares dictionaries from two json files
-    creates 3rd json file with differences'''
+    creates 3rd json file with the differences'''
     
+    # Open jsons with Data and Storage lists of files
     backupDict = {}
     with open(backupDoc, 'r', encoding='utf-8') as backupFile:
         backupDict = json.load(backupFile)
@@ -51,14 +56,19 @@ def compareJSONs(storageDoc, backupDoc, outputFile, userFriendlyOutputFile):
     with open(storageDoc, 'r', encoding='utf-8') as storageFile:
         storageDict = json.load(storageFile)
     
+    # Open file to export user friendly output
     ufoF =  open(userFriendlyOutputFile, 'w', encoding='utf-8')
  
-    # comparing keys in dicts:
+    # comparing keys in dicts
+    # adding changes to other dictionary
+    # writing changes to user friendly output file
     changedDict = {}
+    
     for key in backupDict:
         if key in storageDict:
             # changed keys (items in Backup that have time in Storage)
-            if backupDict[key] != storageDict[key] and isDataFileLaterStorageFile(backupDict[key][2],storageDict[key][2]):
+            if backupDict[key] != storageDict[key] and \
+            isDataFileLaterStorageFile(backupDict[key][2],storageDict[key][2]):
                 changedDict[key] = [backupDict[key],storageDict[key]]
                 ufoF.write('--Файл в Данных был изменен--\n')
                 ufoF.write('В Хранилище: '+str(storageDict[key])+'\n')
@@ -78,12 +88,26 @@ def compareJSONs(storageDoc, backupDoc, outputFile, userFriendlyOutputFile):
             ufoF.write(str(storageDict[key])+'\n')
     
     ufoF.close()
-                
+    
+    # Export changes dictionary to json file            
     with open(outputFile, 'w', encoding='utf-8') as oF:
         json.dump(changedDict, oF, sort_keys=True)
 
+def duration_decorator(func):
+    '''Decorator to count duration of function processing'''
+    
+    def wrapper(*args):
+        # Timer starts
+        timer = time.time()
+        func(*args)
+        duration = time.time() - timer
+        return duration
+    return wrapper
+
+@duration_decorator    
 def copyFilesToStorage(storagePath, dataPath, listOfFiles, logFilePathNew):
-     
+    '''Copies changes to Storage and writes Logfile'''
+    
     logfile = open(logFilePathNew, 'w', encoding='utf-8')
         
     storagePath = storagePath.replace('/', '\\')
@@ -102,8 +126,10 @@ def copyFilesToStorage(storagePath, dataPath, listOfFiles, logFilePathNew):
     
     logfile.close()
 
+@duration_decorator    
 def removeFilesFromStorage(storagePath, dataPath, listOfFiles, logFilePathRem):
-    
+    '''Removes changes from Storage and writes Logfile'''
+
     logfile = open(logFilePathRem, 'w', encoding='utf-8')
 
     storagePath = storagePath.replace('/', '\\')
@@ -116,10 +142,13 @@ def removeFilesFromStorage(storagePath, dataPath, listOfFiles, logFilePathRem):
         except:
             logfile.write('Error: file '+absoluteStoragePath+' wasn\'t removed\n')
     
-    logfile.close()
-        
+    logfile.close()   
+
+@duration_decorator       
 def replaceFilesInStorage(storagePath, dataPath, listOfFiles, logFilePathRepl):
-      
+    '''Replaces files in Storage if they are newer in Data
+    and writes Logfile'''
+
     logfile = open(logFilePathRepl, 'w', encoding='utf-8')
 
     storagePath = storagePath.replace('/', '\\')
@@ -137,9 +166,9 @@ def replaceFilesInStorage(storagePath, dataPath, listOfFiles, logFilePathRepl):
                         ' wasn\'t replaced with the newest one\n')
     
     logfile.close()
-
+    
 def openfile(filepath):
-    '''Opens a file'''
+    '''Opens a file if exists'''
     
     if Path(filepath).exists():
         os.startfile(filepath)
