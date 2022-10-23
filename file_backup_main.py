@@ -105,7 +105,6 @@ class OpenFile_button(Frame):
         self.newFilesText.insert(END, 'Всего: '+str(len(new))+' файлов\n')
         self.removedFilesText.insert(END, 'Всего: '+str(len(removed))+' файлов\n')
 
-
 class Action_Button(Frame):
     '''Class for Button objects for Removing, 
     Changing and Adding files to the Storage'''
