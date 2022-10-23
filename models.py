@@ -1,4 +1,5 @@
 import os, sys, time, hashlib, json, datetime, shutil
+from pathlib import Path
 
 
 def getDeltaFiles(filepath):
@@ -81,47 +82,64 @@ def compareJSONs(storageDoc, backupDoc, outputFile, userFriendlyOutputFile):
     with open(outputFile, 'w', encoding='utf-8') as oF:
         json.dump(changedDict, oF, sort_keys=True)
 
-def copyFilesToStorage(storagePath, dataPath, listOfFiles):
+def copyFilesToStorage(storagePath, dataPath, listOfFiles, logFilePathNew):
+     
+    logfile = open(logFilePathNew, 'w', encoding='utf-8')
+        
     storagePath = storagePath.replace('/', '\\')
     dataPath = dataPath.replace('/', '\\')
-    try:
-        os.makedirs(os.path.dirname(storagePath+listOfFiles[1]+'\\'+listOfFiles[0]), exist_ok=True)
-        shutil.copy(dataPath+listOfFiles[1]+'\\'+listOfFiles[0], storagePath+listOfFiles[1]+'\\'+listOfFiles[0])
-    except:
-        print('file ', dataPath+listOfFiles[1]+'\\'+listOfFiles[0], 'wasn\'t copied')
+    
+    for file in listOfFiles:
+        absoluteStoragePath = storagePath+file[1]+'\\'+file[0]
+        absoluteDataPath = dataPath+file[1]+'\\'+file[0]
 
-def removeFilesFromStorage(storagePath, dataPath, listOfFiles):
+        try:
+            os.makedirs(os.path.dirname(absoluteStoragePath), exist_ok=True)
+            shutil.copy(absoluteDataPath, absoluteStoragePath)
+            logfile.write('Success: file '+absoluteDataPath+' copied\n')
+        except:
+            logfile.write('Error: file '+absoluteDataPath+' wasn\'t copied\n')
+    
+    logfile.close()
+
+def removeFilesFromStorage(storagePath, dataPath, listOfFiles, logFilePathRem):
+    
+    logfile = open(logFilePathRem, 'w', encoding='utf-8')
+
     storagePath = storagePath.replace('/', '\\')
-    try:
-        os.remove(storagePath+listOfFiles[1]+'\\'+listOfFiles[0])
-    except:
-        print('file ', storagePath+listOfFiles[1]+'\\'+listOfFiles[0], 'wasn\'t deleted')
+    
+    for file in listOfFiles:
+        absoluteStoragePath = storagePath+file[1]+'\\'+file[0]
+        try:
+            os.remove(absoluteStoragePath)
+            logfile.write('Success: file '+absoluteStoragePath+' removed\n')
+        except:
+            logfile.write('Error: file '+absoluteStoragePath+' wasn\'t removed\n')
+    
+    logfile.close()
         
-def replaceFilesInStorage(storagePath, dataPath, listOfFiles):
+def replaceFilesInStorage(storagePath, dataPath, listOfFiles, logFilePathRepl):
+      
+    logfile = open(logFilePathRepl, 'w', encoding='utf-8')
+
     storagePath = storagePath.replace('/', '\\')
     dataPath = dataPath.replace('/', '\\')
-    try:
-        shutil.copy(dataPath+listOfFiles[1]+'\\'+listOfFiles[0], storagePath+listOfFiles[1]+'\\'+listOfFiles[0])
-    except:
-        print('file ', storagePath+listOfFiles[1]+'\\'+listOfFiles[0], 'wasn\'t replaced')
+    
+    for file in listOfFiles:
+        absoluteDataPath = dataPath+file[1]+'\\'+file[0]
+        absoluteStoragePath = storagePath+file[1]+'\\'+file[0]
+        try:
+            shutil.copy(absoluteDataPath, absoluteStoragePath)
+            logfile.write('Success: file '+absoluteStoragePath+ 
+                        ' replaced with the newest one\n')
+        except:
+            logfile.write('Error: file '+absoluteStoragePath+ 
+                        ' wasn\'t replaced with the newest one\n')
+    
+    logfile.close()
 
-
-#def openfile(filepath):
-#    '''Opens a file'''
-#    
-#    os.startfile(filepath)
-        
-#def getHash(filepath):
-#    # BUF_SIZE is totally arbitrary, change for your app!
-#    BUF_SIZE = 65536  # lets read stuff in 64kb chunks!
-#
-#
-#    sha1 = hashlib.sha1()
-#
-#    with open(filepath, 'rb') as f:
-#        while True:
-#            data = f.read(BUF_SIZE)
-#            if not data:
-#                break
-#            sha1.update(data)
-#    return sha1.hexdigest()
+def openfile(filepath):
+    '''Opens a file'''
+    
+    if Path(filepath).exists():
+        os.startfile(filepath)
