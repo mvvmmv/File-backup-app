@@ -1,8 +1,6 @@
-<div id="header" align="left">
-  <img src="https://media.giphy.com/media/HscDLzkO8EOTmgkhQP/giphy.gif" width="100"/>
-</div>
 <div id="profile-views-counter" align="left">
-  <img src="https://komarev.com/ghpvc/?username=mvvmmv&style=flat-square&color=blue" alt=""/>
+  <img src="https://komarev.com/ghpvc/?username=mvvmmv&style=flat-square&color=blue" alt=""/><br>
+  <img src="https://img.shields.io/badge/license-Unlicense-blue.svg"/>
 </div>
 <h1>Backup application</h1>
 It's a simple backup application, which compares files<br>
