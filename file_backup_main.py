@@ -127,7 +127,7 @@ class Action_Button(ButtonClass):
         '''Individual for every Action Button'''
         pass
 
-    async def sub_action(self, logFilePath, list_number, text_field):
+    async def sub_action(self, logFilePath, list_number, text_field, func):
         '''Handling list of files.
         list_number - number of list in Delta.json file,
         text_field - gui text field for displaying output,
@@ -151,7 +151,7 @@ class Action_Button(ButtonClass):
         time_start = time.perf_counter()
 
         for file in files_to_handle:
-            await functions.replaceFileInStorage(
+            await func(
                 self.entryStorage.text, self.entryBackup.text, file, logFilePath)
             text_field.delete('1.0', END)
             text_field.insert('1.0', file)
@@ -163,7 +163,7 @@ class Action_Button(ButtonClass):
 
         text_field.delete('1.0', END)
         text_field.insert('1.0',
-                          "Готово! Список замененных файлов находится в файле " +
+                          "Готово! Список обработанных файлов находится в файле " +
                           logFilePath)
         text_field.insert(
             '1.0', f"{'Время выполнения: %.3f секунд(ы)'}\n" % dur)
@@ -196,7 +196,7 @@ class ActionButtonChanged(Action_Button):
         list_number = 0
 
         await self.sub_action(logFilePathRepl, list_number,
-                              self.changedFilesText)
+                              self.changedFilesText, functions.replaceFileInStorage)
 
 
 class ActionButtonNew(Action_Button):
@@ -215,7 +215,7 @@ class ActionButtonNew(Action_Button):
         logFilePathNew = r'ИзмененияДобавленные.txt'
         list_number = 1
 
-        await self.sub_action(logFilePathNew, list_number, self.newFilesText)
+        await self.sub_action(logFilePathNew, list_number, self.newFilesText, functions.copyFileToStorage)
 
 
 class ActionButtonRemoved(Action_Button):
@@ -233,7 +233,7 @@ class ActionButtonRemoved(Action_Button):
         logFilePathRem = r'ИзмененияУдаленные.txt'
         list_number = 2
 
-        await self.sub_action(logFilePathRem, list_number, self.removedFilesText)
+        await self.sub_action(logFilePathRem, list_number, self.removedFilesText, functions.removeFileFromStorage)
 
 
 class pathEntry(Entry):
