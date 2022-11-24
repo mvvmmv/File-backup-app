@@ -23,3 +23,5 @@ in Storage folder.<br>
 <br>
 And it's done!<br>
 <img src="./images/backup_done.png" alt="backup_done" width="400"/><br>
+<br>
+<a href="https://youtu.be/3QAah_fDJ8E">To see how it works (YouTube link to demonstration)</a><br>
